@@ -1,41 +1,45 @@
 # -*- coding: utf-8 -*-
 import datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
 
-class Migration(DataMigration):
+
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
 
-        # If there are already Photosizes, then we are upgrading an existing
-        # installation, we don't want to auto-create some PhotoSizes.
-        if orm.PhotoSize.objects.all().count() > 0:
-            return
-        print('Creating some default PhotoSizes.')
-        orm.Photosize.objects.create(name='admin_thumbnail',
-                                     width=100,
-                                     height=75,
-                                     crop=True,
-                                     pre_cache=True,
-                                     increment_count=True)
-        orm.Photosize.objects.create(name='thumbnail',
-                                     width=100,
-                                     height=75,
-                                     crop=True,
-                                     pre_cache=True,
-                                     increment_count=True)
-        orm.Photosize.objects.create(name='display',
-                                     width=400,
-                                     crop=False,
-                                     pre_cache=True,
-                                     increment_count=True)
+        # Changing field 'Gallery.tags'
+        db.alter_column(u'photologue_gallery', 'tags', self.gf('tagging.fields.TagField')())
+
+        # Changing field 'Gallery.title'
+        db.alter_column(u'photologue_gallery', 'title', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100))
+
+        # Changing field 'GalleryUpload.title'
+        db.alter_column(u'photologue_galleryupload', 'title', self.gf('django.db.models.fields.CharField')(max_length=100))
+
+        # Changing field 'Photo.tags'
+        db.alter_column(u'photologue_photo', 'tags', self.gf('tagging.fields.TagField')())
+
+        # Changing field 'Photo.title'
+        db.alter_column(u'photologue_photo', 'title', self.gf('django.db.models.fields.CharField')(unique=True, max_length=100))
 
     def backwards(self, orm):
-        "Write your backwards methods here."
-        print('No backwards data migration possible - we have no way of knowing'
-              ' if we are dealing with auto-generated or user-entered data.')
+
+        # Changing field 'Gallery.tags'
+        db.alter_column(u'photologue_gallery', 'tags', self.gf('photologue.models.TagField')(max_length=255))
+
+        # Changing field 'Gallery.title'
+        db.alter_column(u'photologue_gallery', 'title', self.gf('django.db.models.fields.CharField')(max_length=50, unique=True))
+
+        # Changing field 'GalleryUpload.title'
+        db.alter_column(u'photologue_galleryupload', 'title', self.gf('django.db.models.fields.CharField')(max_length=50))
+
+        # Changing field 'Photo.tags'
+        db.alter_column(u'photologue_photo', 'tags', self.gf('photologue.models.TagField')(max_length=255))
+
+        # Changing field 'Photo.title'
+        db.alter_column(u'photologue_photo', 'title', self.gf('django.db.models.fields.CharField')(max_length=50, unique=True))
 
     models = {
         u'photologue.gallery': {
@@ -45,8 +49,8 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'photos': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'galleries'", 'null': 'True', 'symmetrical': 'False', 'to': u"orm['photologue.Photo']"}),
-            'tags': ('photologue.models.TagField', [], {'max_length': '255', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
+            'tags': ('tagging.fields.TagField', [], {}),
+            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'title_slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'})
         },
         u'photologue.galleryupload': {
@@ -57,7 +61,7 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'tags': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'zip_file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'})
         },
         u'photologue.photo': {
@@ -70,8 +74,8 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('django.db.models.fields.files.ImageField', [], {'max_length': '100'}),
             'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'tags': ('photologue.models.TagField', [], {'max_length': '255', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50'}),
+            'tags': ('tagging.fields.TagField', [], {}),
+            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '100'}),
             'title_slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50'}),
             'view_count': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'})
         },
@@ -116,4 +120,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['photologue']
-    symmetrical = True
